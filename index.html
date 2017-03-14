@@ -1,0 +1,167 @@
+<html>
+<head>
+	<!-- Ejercicio: 
+		Aplicar un color diferente a cada cara del cubo
+		Crear el metodo para aplicar un color a todo el objeto 3D -->
+	<meta charset="utf-8" />
+	<title>3.2 Color</title>	
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	<script type="text/javascript" src="js/libs/jquery-2.1.4.min.js"></script>
+	<script type="text/javascript" src="js/libs/gl-matrix.js"></script>
+	<script type="text/javascript" src="js/libs/webgl-utils.js"></script>
+	<script type="text/javascript" src="js/libs/utils.js"></script>
+	<script type="text/javascript" src="js/models/shader_manager.js"></script>	
+	<script type="text/javascript" src="js/models/webgl_manager.js"></script>
+	<script type="text/javascript" src="js/models/globject.js"></script>	
+	<script type="text/javascript">
+		var cubeList = [];
+		var selectedIndex = 0;
+		var deltaTime = 0;
+		var lastUpdateTime = 0;
+		$(document).ready(function() {
+			GLM.initialize($('#webgl-canvas')[0]);
+			GLM.getInstance().createProgram(ShaderManager.getBasicColorShader());
+			GLM.getInstance().clear();			
+
+			tick();
+		});
+
+		function tick(time) {
+			// Delta Time
+			time *= .001;
+			deltaTime = time - lastUpdateTime;
+			lastUpdateTime = time;
+			drawScene();
+			requestAnimFrame(tick);
+		}
+
+		function drawScene() {
+			GLM.getInstance().clear();			
+			for (var i = 0; i < cubeList.length; i++) {
+				var cube = cubeList[i];
+
+				if (cube.getPositionX() <= -2) 
+					cube.xDirection = 1;
+				else if (cube.getPositionX() >= 2) 
+					cube.xDirection = -1;
+
+				var velocity = 5.0 * deltaTime;
+				//cube.setPositionX(cube.getPositionX() + velocity * cube.xDirection );
+
+				cube.setRotationX(cubeList[i].getRotationX() + 40.0 * deltaTime);
+				cube.setRotationY(cubeList[i].getRotationY() + 40.0 * deltaTime);
+				cube.draw();
+			}
+		}
+
+		function addCube() {
+			var cube = GLObject.createCube();
+			cube.xDirection = 1;	
+			cubeList.push(cube);
+			
+			var htmlText = "<option value='"+(cubeList.length - 1)+"'>"+cubeList.length+"</option>";
+			$("#slcObject").append(htmlText);
+			clearFields();
+			selectCube();			
+		}
+
+		function selectCube() {
+			selectedIndex = $("#slcObject").val();		
+			var cube = cubeList[selectedIndex];
+			$("#txtPositionX").val(cube.getPositionX());
+			$("#txtPositionY").val(cube.getPositionY());
+			$("#txtPositionZ").val(cube.getPositionZ());
+
+			$("#txtRotationX").val(cube.getRotationX());
+			$("#txtRotationY").val(cube.getRotationY());
+			$("#txtRotationZ").val(cube.getRotationZ());
+
+			$("#txtScaleX").val(cube.getScaleX());
+			$("#txtScaleY").val(cube.getScaleY());
+			$("#txtScaleZ").val(cube.getScaleZ());
+
+			$("#txtColorR").val(cube.getColorR());
+			$("#txtColorG").val(cube.getColorG());
+			$("#txtColorB").val(cube.getColorB());
+			$("#txtColorA").val(cube.getColorA());
+		}
+
+		function applyChanges() {			
+			var position = [ $("#txtPositionX").val(), $("#txtPositionY").val(), $("#txtPositionZ").val() ];
+
+			var rotation = [ $("#txtRotationX").val(), $("#txtRotationY").val(), $("#txtRotationZ").val() ];
+
+			var scale = [ $("#txtScaleX").val(), $("#txtScaleY").val(), $("#txtScaleZ").val() ];
+
+			var color = [ parseFloat($("#txtColorR").val()), 
+						  parseFloat($("#txtColorG").val()), 
+						  parseFloat($("#txtColorB").val()),
+						  parseFloat($("#txtColorA").val()) ];
+
+			var cube = cubeList[selectedIndex];
+			cube.setPosition(position);
+			cube.setRotation(rotation);
+			cube.setScale(scale);
+			cube.setColor(color[0], color[1], color[2], color[3]);
+		}
+
+		function clearFields() {
+			$("#txtPositionX").val("0.0");
+			$("#txtPositionY").val("0.0");
+			$("#txtPositionZ").val("-5.0");
+
+			$("#txtRotationX").val("0.0");
+			$("#txtRotationY").val("0.0");
+			$("#txtRotationZ").val("0.0");
+
+			$("#txtScaleX").val("1.0");
+			$("#txtScaleY").val("1.0");
+			$("#txtScaleZ").val("1.0");
+		}
+
+
+	</script>
+
+</head>
+<body>	
+	<canvas id="webgl-canvas" width="800" height="600"></canvas>
+	<div class="controls">
+		<label>Seleccionar objeto:</label>
+		<br/>
+		<select id="slcObject" onchange="selectCube();"></select>
+		<button onclick="addCube();">Nuevo</button>
+		<br/><br/>		
+		<label>Posición:</label>
+		<br/>
+		<div class="controlsPosition">
+			<input id="txtPositionX" type="number" step=".1" min="0" max="10" value="0.0">
+			<input id="txtPositionY" type="number" step=".1" min="0" max="10" value="0.0">
+			<input id="txtPositionZ" type="number" step=".1" min="0" max="10" value="-5.0">
+		</div>
+		<br/>
+		<label>Rotación:</label>		
+		<div class="controlsPosition">
+			<input id="txtRotationX" type="number" step=".1" min="0" max="10" value="0.0">
+			<input id="txtRotationY" type="number" step=".1" min="0" max="10" value="0.0">
+			<input id="txtRotationZ" type="number" step=".1" min="0" max="10" value="0.0">
+		</div>
+		<br/>
+		<label>Escalación:</label>		
+		<div class="controlsPosition">
+			<input id="txtScaleX" type="number" step=".1" min="0" max="10" value="1.0">
+			<input id="txtScaleY" type="number" step=".1" min="0" max="10" value="1.0">
+			<input id="txtScaleZ" type="number" step=".1" min="0" max="10" value="1.0">
+		</div>
+		<br/>
+		<label>Color:</label>		
+		<div class="controlsPosition">
+			<input id="txtColorR" type="number" step=".1" min="0" max="1" value="1.0">
+			<input id="txtColorG" type="number" step=".1" min="0" max="1" value="1.0">
+			<input id="txtColorB" type="number" step=".1" min="0" max="1" value="1.0">
+			<input id="txtColorA" type="number" step=".1" min="0" max="1" value="1.0">
+		</div>
+		<br/>
+		<button onclick="applyChanges();">Aplicar</button>
+	</div>
+</body>
+</html>
